@@ -7,15 +7,16 @@ let speechQueue = [];
 let currentUtteranceIndex = 0;
 let isSpeaking = false;
 
-// Controle de toques na tela (suporta 1, 2 ou 3 dedos)
+// Controle de toques múltiplos (1, 2 ou 3 dedos)
 let lastTapTime = 0;
 let tapCount = 0;
 let tapTimeout = null;
 
-// Controle de rastreamento de scroll para os cards
+// Controle de rastreamento de scroll para os cards (permite re-leitura infinita)
 let lastReadCardId = null;
 
 // Função universal que toca a fila de frases sem cortar
+// Função universal que toca a fila de frases sem cortar (com prioridade para voz feminina)
 function processQueue() {
   if (!isSpeaking || currentUtteranceIndex >= speechQueue.length) {
     stopSpeech();
@@ -33,18 +34,36 @@ function processQueue() {
   utterance.lang = 'pt-BR';
   utterance.rate = 1.0;
 
-  // Seleção de voz em Português
+  // Seleção de voz em Português com foco em VOZ FEMININA
   const voices = synth.getVoices();
-  const ptVoice = voices.find(v => v.lang && (v.lang.includes('pt') || v.lang.includes('PT')));
-  if (ptVoice) {
-    utterance.voice = ptVoice;
+  
+  // Tenta encontrar uma voz feminina específica em português (ex: Luciana, Maria, Francisca, Google pt-BR feminino)
+  let selectedVoice = voices.find(v => 
+    v.lang && (v.lang.includes('pt') || v.lang.includes('PT')) && 
+    (v.name.toLowerCase().includes('female') || 
+     v.name.toLowerCase().includes('luciana') || 
+     v.name.toLowerCase().includes('maria') || 
+     v.name.toLowerCase().includes('francisca') || 
+     v.name.toLowerCase().includes('google do brasil') ||
+     v.name.toLowerCase().includes('raquel'))
+  );
+
+  // Se não achar pelo nome feminino explícito, pega qualquer voz em português disponível
+  if (!selectedVoice) {
+    selectedVoice = voices.find(v => v.lang && (v.lang.includes('pt') || v.lang.includes('PT')));
   }
 
+  if (selectedVoice) {
+    utterance.voice = selectedVoice;
+  }
+
+  // Avança para a próxima frase da fila quando terminar a atual
   utterance.onend = () => {
     currentUtteranceIndex++;
     processQueue();
   };
 
+  // Prevenção de erro em celulares
   utterance.onerror = (e) => {
     console.error('Erro na fala:', e);
     currentUtteranceIndex++;
@@ -75,7 +94,7 @@ function stopSpeech() {
   });
 }
 
-// 1. LER PÁGINA COMPLETA (Com a mensagem inicial solicitada)
+// 1. LER PÁGINA COMPLETA (Com a mensagem inicial explicativa solicitada)
 function speakFullStory() {
   if (!synth) {
     alert('Seu navegador não suporta leitura em voz alta.');
@@ -92,8 +111,8 @@ function speakFullStory() {
   const elementoResumo = document.getElementById('texto-resumo');
   const resumo = elementoResumo ? elementoResumo.innerText : '';
   
-  // Mensagem inicial detalhada solicitada
-  let fullText = `Aviso de acessibilidade: Você pode parar a leitura a qualquer momento dando três cliques na tela com um, dois ou três dedos. Ao deslizar a tela para baixo, as etapas e as descrições das imagens serão lidas automaticamente. Iniciando a leitura do site. Rompendo barreiras, buscando acessibilidade. ${tituloPrincipal}. ${subtitulo}. ${resumo}. A seguir, apresentamos as seis etapas do projeto: `;
+  // Mensagem inicial de instruções solicitada
+  let fullText = `Aviso de acessibilidade: Você pode parar a leitura a qualquer momento dando três toques na tela com um, dois ou três dedos. Ao deslizar a tela para baixo, o Sobre o Projeto, as etapas e as descrições das imagens serão lidas automaticamente. Iniciando a leitura do site. Rompendo barreiras, buscando acessibilidade. ${tituloPrincipal}. ${subtitulo}. ${resumo}. A seguir, apresentamos as seis etapas do projeto: `;
 
   for (let i = 1; i <= 6; i++) {
     const elTitulo = document.getElementById(`card${i}-titulo`);
@@ -142,11 +161,10 @@ function speakCardTextFromButton(button) {
   const texto = elTexto ? elTexto.innerText : '';
   const imgAlt = (elImg && elImg.alt) ? elImg.alt : '';
 
-  let textToSpeak = `${titulo}. `;
-  if (imgAlt) {
-    textToSpeak += `Descrição da imagem: ${imgAlt}. `;
-  }
-  textToSpeak += `${texto}`;
+  let textToSpeak = '';
+  if (titulo) textToSpeak += `${titulo}. `;
+  if (imgAlt) textToSpeak += `Descrição da imagem: ${imgAlt}. `;
+  if (texto) textToSpeak += `${texto}`;
 
   speechQueue = textToSpeak.split(/(?<=[.?!])\s+/);
   currentUtteranceIndex = 0;
@@ -155,24 +173,23 @@ function speakCardTextFromButton(button) {
   processQueue();
 }
 
-// Ler card específico diretamente (usado na rolagem contínua)
+// Ler card ou seção específica diretamente (usado na rolagem contínua)
 function speakCardDirect(idTitulo, idTexto, idImg) {
   if (!synth) return;
   stopSpeech();
 
-  const elTitulo = document.getElementById(idTitulo);
-  const elTexto = document.getElementById(idTexto);
-  const elImg = document.getElementById(idImg);
+  const elTitulo = idTitulo ? document.getElementById(idTitulo) : null;
+  const elTexto = idTexto ? document.getElementById(idTexto) : null;
+  const elImg = idImg ? document.getElementById(idImg) : null;
 
   const titulo = elTitulo ? elTitulo.innerText : '';
   const texto = elTexto ? elTexto.innerText : '';
   const imgAlt = (elImg && elImg.alt) ? elImg.alt : '';
 
-  let textToSpeak = `${titulo}. `;
-  if (imgAlt) {
-    textToSpeak += `Descrição da imagem: ${imgAlt}. `;
-  }
-  textToSpeak += `${texto}`;
+  let textToSpeak = '';
+  if (titulo) textToSpeak += `${titulo}. `;
+  if (imgAlt) textToSpeak += `Descrição da imagem: ${imgAlt}. `;
+  if (texto) textToSpeak += `${texto}`;
 
   speechQueue = textToSpeak.split(/(?<=[.?!])\s+/);
   currentUtteranceIndex = 0;
@@ -236,9 +253,10 @@ document.addEventListener('DOMContentLoaded', () => {
     input.addEventListener('change', handleImagePreview);
   });
 
-  // SISTEMA DE TOQUES NA TELA (Compatível com 1, 2 ou 3 dedos em qualquer lugar)
-  document.addEventListener('touchend', (e) => {
-    if (e.target.closest('input') || e.target.closest('label')) return;
+  // SUPORTE A TOQUES TÁTEIS COM 1, 2 OU 3 DEDOS (EM QUALQUER LUGAR DA TELA)
+  document.addEventListener('touchstart', (e) => {
+    // Permite uso normal em botões, links e inputs de upload
+    if (e.target.closest('input') || e.target.closest('label') || e.target.closest('button') || e.target.closest('a')) return;
 
     const currentTime = new Date().getTime();
     tapCount++;
@@ -249,55 +267,76 @@ document.addEventListener('DOMContentLoaded', () => {
 
     tapTimeout = setTimeout(() => {
       if (tapCount === 2) {
-        // 2 toques rápidos em qualquer lugar -> Lê o site inteiro com a mensagem de aviso
+        // 2 toques rápidos (com 1, 2 ou 3 dedos) -> Lê o site inteiro
         speakFullStory();
       } else if (tapCount >= 3) {
-        // 3 toques rápidos em qualquer lugar -> Para a leitura imediatamente
+        // 3 toques rápidos (com 1, 2 ou 3 dedos) -> Para a leitura imediatamente
+        stopSpeech();
+      }
+      tapCount = 0;
+    }, 400);
+  }, { passive: true });
+
+  // SUPORTE TAMBÉM A CLIQUES DE MOUSE (PARA TESTES NO PC)
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('input') || e.target.closest('label') || e.target.closest('button') || e.target.closest('a')) return;
+
+    const currentTime = new Date().getTime();
+    tapCount++;
+
+    if (tapTimeout) {
+      clearTimeout(tapTimeout);
+    }
+
+    tapTimeout = setTimeout(() => {
+      if (tapCount === 2) {
+        speakFullStory();
+      } else if (tapCount >= 3) {
         stopSpeech();
       }
       tapCount = 0;
     }, 400);
   });
 
-  // SUPORTE TAMBÉM PARA CLIQUE DE MOUSE (Caso testem no computador)
-  document.addEventListener('click', (e) => {
-    if (e.target.closest('input') || e.target.closest('label')) return;
-    
-    // Evita conflito duplo caso o navegador dispare touch e click juntos
-    const currentTime = new Date().getTime();
-    if (currentTime - lastTapTime < 500) return;
-    lastTapTime = currentTime;
-  });
-
-  // ROLAGEM CONTÍNUA DA TELA (SCROLL): LÊ OS CARDS AUTOMATICAMENTE A QUALQUER MOMENTO
-  const cardsEtapas = document.querySelectorAll('.card-etapa');
+  // ROLAGEM CONTÍNUA (SCROLL READER): LÊ OS BLOCOS E CARDS AUTOMATICAMENTE A QUALQUER MOMENTO (SEM PRECISAR RECARREGAR)
+  const blocosEtapas = document.querySelectorAll('.card-etapa');
   
   window.addEventListener('scroll', () => {
-    const scrollPosition = window.scrollY + window.innerHeight * 0.45; // Centro da tela do celular
+    const scrollPosition = window.scrollY + window.innerHeight * 0.45; // Centro da tela
 
-    let activeCardFound = false;
+    let activeCardId = null;
 
-    cardsEtapas.forEach(card => {
-      const cardTop = card.offsetTop;
-      const cardBottom = cardTop + card.offsetHeight;
+    blocosEtapas.forEach(bloco => {
+      const blocoTop = bloco.offsetTop;
+      const blocoBottom = blocoTop + bloco.offsetHeight;
 
-      if (scrollPosition >= cardTop && scrollPosition <= cardBottom) {
-        activeCardFound = true;
-        const cardId = card.getAttribute('data-title');
-
-        if (cardId && cardId !== lastReadCardId) {
-          lastReadCardId = cardId;
-          
-          const titleId = card.getAttribute('data-title');
-          const textId = card.getAttribute('data-text');
-          const imgId = card.getAttribute('data-img');
-
-          speakCardDirect(titleId, textId, imgId);
-        }
+      if (scrollPosition >= blocoTop && scrollPosition <= blocoBottom) {
+        activeCardId = bloco.getAttribute('data-title');
       }
     });
 
-    if (!activeCardFound) {
+    // Se mudou para um bloco novo e ele é diferente do último lido
+    if (activeCardId && activeCardId !== lastReadCardId) {
+      lastReadCardId = activeCardId;
+      
+      const blocoAtivo = document.querySelector(`[data-title="${activeCardId}"]`);
+      if (blocoAtivo) {
+        const titleId = blocoAtivo.getAttribute('data-title');
+        const textId = blocoAtivo.getAttribute('data-text');
+        
+        // Descobre se o bloco tem imagem associada
+        let imgId = null;
+        const imgElement = blocoAtivo.querySelector('img');
+        if (imgElement && imgElement.id) {
+          imgId = imgElement.id;
+        }
+
+        speakCardDirect(titleId, textId, imgId);
+      }
+    }
+
+    // Se o usuário saiu de todos os blocos monitorados, reseta para permitir re-leitura ao rolar de novo
+    if (!activeCardId) {
       lastReadCardId = null;
     }
   });
