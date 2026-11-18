@@ -7,15 +7,13 @@ let speechQueue = [];
 let currentUtteranceIndex = 0;
 let isSpeaking = false;
 
-// Controle de toques múltiplos (1, 2 ou 3 dedos)
-let lastTapTime = 0;
+// Controle de toques na tela para celular e computador
 let tapCount = 0;
 let tapTimeout = null;
 
 // Controle de rastreamento de scroll para os cards (permite re-leitura infinita)
 let lastReadCardId = null;
 
-// Função universal que toca a fila de frases sem cortar
 // Função universal que toca a fila de frases sem cortar (com prioridade para voz feminina)
 function processQueue() {
   if (!isSpeaking || currentUtteranceIndex >= speechQueue.length) {
@@ -36,8 +34,6 @@ function processQueue() {
 
   // Seleção de voz em Português com foco em VOZ FEMININA
   const voices = synth.getVoices();
-  
-  // Tenta encontrar uma voz feminina específica em português (ex: Luciana, Maria, Francisca, Google pt-BR feminino)
   let selectedVoice = voices.find(v => 
     v.lang && (v.lang.includes('pt') || v.lang.includes('PT')) && 
     (v.name.toLowerCase().includes('female') || 
@@ -48,7 +44,6 @@ function processQueue() {
      v.name.toLowerCase().includes('raquel'))
   );
 
-  // Se não achar pelo nome feminino explícito, pega qualquer voz em português disponível
   if (!selectedVoice) {
     selectedVoice = voices.find(v => v.lang && (v.lang.includes('pt') || v.lang.includes('PT')));
   }
@@ -57,13 +52,11 @@ function processQueue() {
     utterance.voice = selectedVoice;
   }
 
-  // Avança para a próxima frase da fila quando terminar a atual
   utterance.onend = () => {
     currentUtteranceIndex++;
     processQueue();
   };
 
-  // Prevenção de erro em celulares
   utterance.onerror = (e) => {
     console.error('Erro na fala:', e);
     currentUtteranceIndex++;
@@ -111,7 +104,6 @@ function speakFullStory() {
   const elementoResumo = document.getElementById('texto-resumo');
   const resumo = elementoResumo ? elementoResumo.innerText : '';
   
-  // Mensagem inicial de instruções solicitada
   let fullText = `Aviso de acessibilidade: Você pode parar a leitura a qualquer momento dando três toques na tela com um, dois ou três dedos. Ao deslizar a tela para baixo, o Sobre o Projeto, as etapas e as descrições das imagens serão lidas automaticamente. Iniciando a leitura do site. Rompendo barreiras, buscando acessibilidade. ${tituloPrincipal}. ${subtitulo}. ${resumo}. A seguir, apresentamos as seis etapas do projeto: `;
 
   for (let i = 1; i <= 6; i++) {
@@ -253,12 +245,11 @@ document.addEventListener('DOMContentLoaded', () => {
     input.addEventListener('change', handleImagePreview);
   });
 
-  // SUPORTE A TOQUES TÁTEIS COM 1, 2 OU 3 DEDOS (EM QUALQUER LUGAR DA TELA)
-  document.addEventListener('touchstart', (e) => {
-    // Permite uso normal em botões, links e inputs de upload
+  // FUNÇÃO CENTRALIZADA DE GESTOS (2 toques para ler tudo, 3 toques para parar)
+  function handleMultiTouch(e) {
+    // Permite uso normal em campos de texto, inputs de arquivo ou botões específicos
     if (e.target.closest('input') || e.target.closest('label') || e.target.closest('button') || e.target.closest('a')) return;
 
-    const currentTime = new Date().getTime();
     tapCount++;
 
     if (tapTimeout) {
@@ -274,35 +265,18 @@ document.addEventListener('DOMContentLoaded', () => {
         stopSpeech();
       }
       tapCount = 0;
-    }, 400);
-  }, { passive: true });
+    }, 450); // Janela de tempo otimizada para celulares
+  }
 
-  // SUPORTE TAMBÉM A CLIQUES DE MOUSE (PARA TESTES NO PC)
-  document.addEventListener('click', (e) => {
-    if (e.target.closest('input') || e.target.closest('label') || e.target.closest('button') || e.target.closest('a')) return;
+  // Registra tanto o toque direto na tela do celular (touchstart) quanto cliques normais
+  document.addEventListener('touchstart', handleMultiTouch, { passive: true });
+  document.addEventListener('click', handleMultiTouch);
 
-    const currentTime = new Date().getTime();
-    tapCount++;
-
-    if (tapTimeout) {
-      clearTimeout(tapTimeout);
-    }
-
-    tapTimeout = setTimeout(() => {
-      if (tapCount === 2) {
-        speakFullStory();
-      } else if (tapCount >= 3) {
-        stopSpeech();
-      }
-      tapCount = 0;
-    }, 400);
-  });
-
-  // ROLAGEM CONTÍNUA (SCROLL READER): LÊ OS BLOCOS E CARDS AUTOMATICAMENTE A QUALQUER MOMENTO (SEM PRECISAR RECARREGAR)
+  // ROLAGEM CONTÍNUA (SCROLL READER): LÊ OS BLOCOS E CARDS AUTOMATICAMENTE A QUALQUER MOMENTO
   const blocosEtapas = document.querySelectorAll('.card-etapa');
   
   window.addEventListener('scroll', () => {
-    const scrollPosition = window.scrollY + window.innerHeight * 0.45; // Centro da tela
+    const scrollPosition = window.scrollY + window.innerHeight * 0.45; // Centro da tela do celular
 
     let activeCardId = null;
 
@@ -315,7 +289,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    // Se mudou para um bloco novo e ele é diferente do último lido
     if (activeCardId && activeCardId !== lastReadCardId) {
       lastReadCardId = activeCardId;
       
@@ -324,7 +297,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const titleId = blocoAtivo.getAttribute('data-title');
         const textId = blocoAtivo.getAttribute('data-text');
         
-        // Descobre se o bloco tem imagem associada
         let imgId = null;
         const imgElement = blocoAtivo.querySelector('img');
         if (imgElement && imgElement.id) {
@@ -335,7 +307,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    // Se o usuário saiu de todos os blocos monitorados, reseta para permitir re-leitura ao rolar de novo
     if (!activeCardId) {
       lastReadCardId = null;
     }
