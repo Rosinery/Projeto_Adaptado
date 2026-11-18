@@ -104,7 +104,7 @@ function speakFullStory() {
   const elementoResumo = document.getElementById('texto-resumo');
   const resumo = elementoResumo ? elementoResumo.innerText : '';
   
-  let fullText = `Aviso de acessibilidade: Você pode parar a leitura a qualquer momento dando três toques na tela com um, dois ou três dedos. Ao deslizar a tela para baixo, o Sobre o Projeto, as etapas e as descrições das imagens serão lidas automaticamente. Iniciando a leitura do site. Rompendo barreiras, buscando acessibilidade. ${tituloPrincipal}. ${subtitulo}. ${resumo}. A seguir, apresentamos as seis etapas do projeto: `;
+  let fullText = `Aviso de acessibilidade: Você pode parar a leitura a qualquer momento dando três toques na tela com um dedo. Ao deslizar a tela para baixo, o Sobre o Projeto, as etapas e as descrições das imagens serão lidas automaticamente. Iniciando a leitura do site. Rompendo barreiras, buscando acessibilidade. ${tituloPrincipal}. ${subtitulo}. ${resumo}. A seguir, apresentamos as seis etapas do projeto: `;
 
   for (let i = 1; i <= 6; i++) {
     const elTitulo = document.getElementById(`card${i}-titulo`);
