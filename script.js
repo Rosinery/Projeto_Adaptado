@@ -7,7 +7,7 @@ let speechQueue = [];
 let currentUtteranceIndex = 0;
 let isSpeaking = false;
 
-// Controle de toques na tela para celular e computador
+// Controle unificado de toques/cliques (funciona em qualquer lugar, inclusive nos cards)
 let tapCount = 0;
 let tapTimeout = null;
 
@@ -245,10 +245,10 @@ document.addEventListener('DOMContentLoaded', () => {
     input.addEventListener('change', handleImagePreview);
   });
 
-  // FUNÇÃO CENTRALIZADA DE GESTOS (2 toques para ler tudo, 3 toques para parar)
-  function handleMultiTouch(e) {
-    // Permite uso normal em campos de texto, inputs de arquivo ou botões específicos
-    if (e.target.closest('input') || e.target.closest('label') || e.target.closest('button') || e.target.closest('a')) return;
+  // DETECÇÃO GLOBAL DE TOQUES (Funciona EM QUALQUER LUGAR, inclusive em cima dos cards)
+  function registerTap(e) {
+    // Exceção apenas para inputs de upload de arquivos (para não atrapalhar a seleção de fotos)
+    if (e.target.closest('input[type="file"]')) return;
 
     tapCount++;
 
@@ -258,25 +258,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
     tapTimeout = setTimeout(() => {
       if (tapCount === 2) {
-        // 2 toques rápidos (com 1, 2 ou 3 dedos) -> Lê o site inteiro
+        // 2 toques rápidos em qualquer lugar (inclusive cards) -> Lê o site inteiro
         speakFullStory();
       } else if (tapCount >= 3) {
-        // 3 toques rápidos (com 1, 2 ou 3 dedos) -> Para a leitura imediatamente
+        // 3 toques rápidos em qualquer lugar (inclusive cards) -> Para imediatamente
         stopSpeech();
       }
       tapCount = 0;
-    }, 450); // Janela de tempo otimizada para celulares
+    }, 400);
   }
 
-  // Registra tanto o toque direto na tela do celular (touchstart) quanto cliques normais
-  document.addEventListener('touchstart', handleMultiTouch, { passive: true });
-  document.addEventListener('click', handleMultiTouch);
+  // Escuta os toques em qualquer elemento do documento
+  document.addEventListener('touchend', registerTap, { passive: true });
+  document.addEventListener('click', (e) => {
+    if (e.pointerType === 'touch' || (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents)) return;
+    registerTap(e);
+  });
 
   // ROLAGEM CONTÍNUA (SCROLL READER): LÊ OS BLOCOS E CARDS AUTOMATICAMENTE A QUALQUER MOMENTO
   const blocosEtapas = document.querySelectorAll('.card-etapa');
   
   window.addEventListener('scroll', () => {
-    const scrollPosition = window.scrollY + window.innerHeight * 0.45; // Centro da tela do celular
+    const scrollPosition = window.scrollY + window.innerHeight * 0.45; // Centro da tela
 
     let activeCardId = null;
 
