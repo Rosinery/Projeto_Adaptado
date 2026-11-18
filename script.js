@@ -7,14 +7,14 @@ let speechQueue = [];
 let currentUtteranceIndex = 0;
 let isSpeaking = false;
 
-// Controle unificado de toques/cliques (funciona em qualquer lugar, inclusive nos cards)
+// Controle de toques na tela (1, 2 ou 3 dedos)
 let tapCount = 0;
 let tapTimeout = null;
 
-// Controle de rastreamento de scroll para os cards (permite re-leitura infinita)
+// Controle de rastreamento de scroll para os blocos e cards
 let lastReadCardId = null;
 
-// Função universal que toca a fila de frases sem cortar (com prioridade para voz feminina)
+// Função universal que toca a fila de frases sem cortar (prioridade para voz feminina)
 function processQueue() {
   if (!isSpeaking || currentUtteranceIndex >= speechQueue.length) {
     stopSpeech();
@@ -32,7 +32,7 @@ function processQueue() {
   utterance.lang = 'pt-BR';
   utterance.rate = 1.0;
 
-  // Seleção de voz em Português com foco em VOZ FEMININA
+  // Seleção de voz em Português (Foco em voz feminina)
   const voices = synth.getVoices();
   let selectedVoice = voices.find(v => 
     v.lang && (v.lang.includes('pt') || v.lang.includes('PT')) && 
@@ -83,11 +83,15 @@ function stopSpeech() {
 
   const botoesEtapas = document.querySelectorAll('.btn-ouvir-card');
   botoesEtapas.forEach((btn, index) => {
-    btn.innerHTML = `🔊 Ouvir Etapa ${index + 1}`;
+    if (index === 0) {
+      btn.innerHTML = '🔊 Ouvir Sobre o Projeto';
+    } else {
+      btn.innerHTML = `🔊 Ouvir Etapa ${index}`;
+    }
   });
 }
 
-// 1. LER PÁGINA COMPLETA (Com a mensagem inicial explicativa solicitada)
+// 1. LER PÁGINA COMPLETA (Com a mensagem inicial explicativa)
 function speakFullStory() {
   if (!synth) {
     alert('Seu navegador não suporta leitura em voz alta.');
@@ -104,7 +108,7 @@ function speakFullStory() {
   const elementoResumo = document.getElementById('texto-resumo');
   const resumo = elementoResumo ? elementoResumo.innerText : '';
   
-  let fullText = `Aviso de acessibilidade: Você pode parar a leitura a qualquer momento dando três toques na tela com um dedo. Ao deslizar a tela para baixo, o Sobre o Projeto, as etapas e as descrições das imagens serão lidas automaticamente. Iniciando a leitura do site. Rompendo barreiras, buscando acessibilidade. ${tituloPrincipal}. ${subtitulo}. ${resumo}. A seguir, apresentamos as seis etapas do projeto: `;
+  let fullText = `Aviso de acessibilidade: Você pode parar a leitura a qualquer momento dando três toques na tela com um, dois ou três dedos. Ao deslizar a tela para baixo, o Sobre o Projeto, as etapas e as descrições das imagens serão lidas automaticamente. Iniciando a leitura do site. Rompendo barreiras, buscando acessibilidade. ${tituloPrincipal}. ${subtitulo}. ${resumo}. A seguir, apresentamos as seis etapas do projeto: `;
 
   for (let i = 1; i <= 6; i++) {
     const elTitulo = document.getElementById(`card${i}-titulo`);
@@ -132,7 +136,7 @@ function speakFullStory() {
   processQueue();
 }
 
-// 2. LER ETAPA INDIVIDUAL POR BOTÃO
+// 2. LER ETAPA OU SOBRE O PROJETO INDIVIDUAL POR BOTÃO
 function speakCardTextFromButton(button) {
   const btnOuvirTudo = document.getElementById('btn-ouvir-tudo');
   if (btnOuvirTudo) btnOuvirTudo.innerHTML = '🔊 Lendo...';
@@ -143,11 +147,13 @@ function speakCardTextFromButton(button) {
 
   const idTitulo = button.getAttribute('data-title');
   const idTexto = button.getAttribute('data-text');
-  const idImg = button.getAttribute('data-img');
 
   const elTitulo = idTitulo ? document.getElementById(idTitulo) : null;
   const elTexto = idTexto ? document.getElementById(idTexto) : null;
-  const elImg = idImg ? document.getElementById(idImg) : null;
+  
+  // Procura imagem associada se houver dentro do mesmo card/seção
+  const parentContainer = button.closest('section') || button.closest('article');
+  const elImg = parentContainer ? parentContainer.querySelector('img') : null;
 
   const titulo = elTitulo ? elTitulo.innerText : '';
   const texto = elTexto ? elTexto.innerText : '';
@@ -166,13 +172,12 @@ function speakCardTextFromButton(button) {
 }
 
 // Ler card ou seção específica diretamente (usado na rolagem contínua)
-function speakCardDirect(idTitulo, idTexto, idImg) {
+function speakCardDirect(idTitulo, idTexto, elImg) {
   if (!synth) return;
   stopSpeech();
 
   const elTitulo = idTitulo ? document.getElementById(idTitulo) : null;
   const elTexto = idTexto ? document.getElementById(idTexto) : null;
-  const elImg = idImg ? document.getElementById(idImg) : null;
 
   const titulo = elTitulo ? elTitulo.innerText : '';
   const texto = elTexto ? elTexto.innerText : '';
@@ -245,9 +250,8 @@ document.addEventListener('DOMContentLoaded', () => {
     input.addEventListener('change', handleImagePreview);
   });
 
-  // DETECÇÃO GLOBAL DE TOQUES (Funciona EM QUALQUER LUGAR, inclusive em cima dos cards)
+  // DETECÇÃO GLOBAL DE TOQUES (2 toques para falar, 3 para parar em qualquer lugar)
   function registerTap(e) {
-    // Exceção apenas para inputs de upload de arquivos (para não atrapalhar a seleção de fotos)
     if (e.target.closest('input[type="file"]')) return;
 
     tapCount++;
@@ -258,24 +262,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     tapTimeout = setTimeout(() => {
       if (tapCount === 2) {
-        // 2 toques rápidos em qualquer lugar (inclusive cards) -> Lê o site inteiro
         speakFullStory();
       } else if (tapCount >= 3) {
-        // 3 toques rápidos em qualquer lugar (inclusive cards) -> Para imediatamente
         stopSpeech();
       }
       tapCount = 0;
     }, 400);
   }
 
-  // Escuta os toques em qualquer elemento do documento
   document.addEventListener('touchend', registerTap, { passive: true });
   document.addEventListener('click', (e) => {
     if (e.pointerType === 'touch' || (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents)) return;
     registerTap(e);
   });
 
-  // ROLAGEM CONTÍNUA (SCROLL READER): LÊ OS BLOCOS E CARDS AUTOMATICAMENTE A QUALQUER MOMENTO
+  // ROLAGEM CONTÍNUA (SCROLL READER): LEITURA AUTOMÁTICA DO SOBRE O PROJETO E DOS CARDS
   const blocosEtapas = document.querySelectorAll('.card-etapa');
   
   window.addEventListener('scroll', () => {
@@ -299,14 +300,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if (blocoAtivo) {
         const titleId = blocoAtivo.getAttribute('data-title');
         const textId = blocoAtivo.getAttribute('data-text');
-        
-        let imgId = null;
         const imgElement = blocoAtivo.querySelector('img');
-        if (imgElement && imgElement.id) {
-          imgId = imgElement.id;
-        }
 
-        speakCardDirect(titleId, textId, imgId);
+        speakCardDirect(titleId, textId, imgElement);
       }
     }
 
