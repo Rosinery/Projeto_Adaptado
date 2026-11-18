@@ -73,14 +73,13 @@
       <p id="texto-resumo" class="card-text leading-relaxed text-base md:text-lg mb-4">
         Nosso projeto nasceu da necessidade de tornar o ambiente escolar acessível para estudantes
         com deficiência visual. Unindo os estudos de cartografia tátil com os circuitos e
-        programação, os alunos construíram uma maquete interativa e o protótipo funcional 
-        de um robô inteligente equipado com sensores e câmera para leitura de QR Codes.
+        programação, os alunos construíram maquete interativa e protótipo funcional 
+        de robô inteligente equipado com sensores e câmera para leitura de QR Codes.
       </p>
       <div class="dica-box border-l-4 p-4 rounded-r-md">
         <p class="dica-text text-sm md:text-base font-medium">
           💡 <strong>Dica de Acessibilidade:</strong> 
-          Você pode clicar nos botões de áudio em cada etapa para ouvir o relato dos alunos 
-          ou usar a plataforma Libras no canto da tela!
+          Dê dois cliques em qualquer lugar da tela para ouvir o site do início. Dê três cliques para parar a qualquer momento. Role a página para ler os cards automaticamente.
         </p>
       </div>
     </section>
@@ -93,56 +92,51 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
 
       <!-- CARD 1 -->
-<article class="card-bg rounded-2xl shadow-md overflow-hidden border border-slate-200 flex flex-col justify-between" aria-labelledby="card1-titulo">
-  <div>
-    <!-- REMOVIDO o h-64 e ADICIONADO h-auto para a div crescer junto com a imagem -->
-    <div class="relative bg-slate-200 h-auto flex items-center justify-center overflow-hidden">
-      <!-- CORRIGIDO para object-contain e h-auto -->
-      <img 
-        id="img-card-1" 
-        src="img/MAPAGEO.jpeg" 
-        alt="mapeando os corredores da escola com bengala e navegando por rampas e obstáculos." 
-        class="w-full h-auto object-contain block"
-      />           
-     <!-- <label for="input-img-1" class="btn-upload absolute bottom-2 right-2 text-xs px-3 py-2 rounded-lg cursor-pointer flex items-center gap-1 focus-ring">
-        📷 Inserir Foto 1
-      </label> -->
-      <input type="file" id="input-img-1" accept="image/*" class="sr-only input-foto" data-target="img-card-1">
-    </div>
-    <div class="p-6">
-      <span class="card-tag card-tag-geografia text-xs font-bold uppercase tracking-widest">Etapa 1 • Geografia</span>
-      <h3 id="card1-titulo" class="card-title text-xl font-bold mt-1 mb-2">1. Reconhecimento do Espaço Escolar</h3>
-      <p id="card1-texto" class="card-text text-base leading-relaxed">
-        Iniciamos o projeto explorando o espaço escolar sob a perspectiva da Geografia Inclusiva. 
-        Para isso, os alunos realizaram uma caminhada pelo ambiente escolar com os olhos vendados, 
-        enquanto o estudante cego os conduzia pelo percurso, identificando e apontando as barreiras físicas 
-        que dificultam seu acesso e sua circulação diária pelos diferentes espaços da escola. <br>
-        Essa experiência proporcionou aos alunos uma nova percepção do espaço, permitindo compreender, na prática, 
-        os desafios enfrentados por uma pessoa com deficiência visual em seu cotidiano. A percepção espacial foi fundamental 
-        para identificar e definir os pontos de orientação que servirão de referência para a navegação do protótipo robótico, 
-        além de contribuir diretamente para a construção do mapa tátil da escola. <br>
-        A observação e o reconhecimento do espaço escolar, aliados aos conhecimentos geográficos, auxiliaram 
-        no desenvolvimento de um recurso tecnológico voltado à promoção da autonomia, 
-        da orientação e da inclusão no ambiente escolar.
-      </p>
-    </div>
-  </div>
-  <div class="p-6 pt-0">
-    <button class="btn-ouvir-card w-full font-semibold py-2 px-4 rounded-xl flex items-center justify-center gap-2 focus-ring transition" data-title="card1-titulo" data-text="card1-texto" data-img="img-card-1">
-      🔊 Ouvir Etapa 1
-    </button>
-  </div>
-</article>
+      <article class="card-etapa card-bg rounded-2xl shadow-md overflow-hidden border border-slate-200 flex flex-col justify-between" aria-labelledby="card1-titulo" data-title="card1-titulo" data-text="card1-texto" data-img="img-card-1">
+        <div>
+          <div class="relative bg-slate-200 h-auto flex items-center justify-center overflow-hidden">
+            <img 
+              id="img-card-1" 
+              src="img/MAPAGEO.jpeg" 
+              alt="mapeando os corredores da escola com bengala e navegando por rampas e obstáculos." 
+              class="w-full h-auto object-contain block"
+            />           
+            <input type="file" id="input-img-1" accept="image/*" class="sr-only input-foto" data-target="img-card-1">
+          </div>
+          <div class="p-6">
+            <span class="card-tag card-tag-geografia text-xs font-bold uppercase tracking-widest">Etapa 1 • Geografia</span>
+            <h3 id="card1-titulo" class="card-title text-xl font-bold mt-1 mb-2">1. Reconhecimento do Espaço Escolar</h3>
+            <p id="card1-texto" class="card-text text-base leading-relaxed">
+              Iniciamos o projeto explorando o espaço escolar sob a perspectiva da Geografia Inclusiva. 
+              Para isso, os alunos realizaram uma caminhada pelo ambiente escolar com os olhos vendados, 
+              enquanto o estudante cego os conduzia pelo percurso, identificando e apontando as barreiras físicas 
+              que dificultam seu acesso e sua circulação diária pelos diferentes espaços da escola. <br>
+              Essa experiência proporcionou aos alunos uma nova percepção do espaço, permitindo compreender, na prática, 
+              os desafios enfrentados por uma pessoa com deficiência visual em seu cotidiano. A percepção espacial foi fundamental 
+              para identificar e definir os pontos de orientação que servirão de referência para a navegação do protótipo robótico, 
+              além de contribuir diretamente para a construção do mapa tátil da escola. <br>
+              A observação e o reconhecimento do espaço escolar, aliados aos conhecimentos geográficos, auxiliaram 
+              no desenvolvimento de um recurso tecnológico voltado à promoção da autonomia, 
+              da orientação e da inclusão no ambiente escolar.
+            </p>
+          </div>
+        </div>
+        <div class="p-6 pt-0">
+          <button class="btn-ouvir-card w-full font-semibold py-2 px-4 rounded-xl flex items-center justify-center gap-2 focus-ring transition" data-title="card1-titulo" data-text="card1-texto" data-img="img-card-1">
+            🔊 Ouvir Etapa 1
+          </button>
+        </div>
+      </article>
 
       <!-- CARD 2 -->
-      <article class="card-bg rounded-2xl shadow-md overflow-hidden border border-slate-200 flex flex-col justify-between" aria-labelledby="card2-titulo">
+      <article class="card-etapa card-bg rounded-2xl shadow-md overflow-hidden border border-slate-200 flex flex-col justify-between" aria-labelledby="card2-titulo" data-title="card2-titulo" data-text="card2-texto" data-img="img-card-2">
         <div>
           <div class="relative bg-slate-200 h-64 flex items-center justify-center overflow-hidden">
             <img 
-        id="img-card-1" 
-        src="img/MAPAGEO.jpeg" 
-        alt="mapeando os corredores da escola com bengala e navegando por rampas e obstáculos." 
-        class="w-full h-auto object-contain block"/>
+              id="img-card-2" 
+              src="img/MAPAGEO.jpeg" 
+              alt="mapeando os corredores da escola com bengala e navegando por rampas e obstáculos." 
+              class="w-full h-auto object-contain block"/>
             <label for="input-img-2" class="btn-upload absolute bottom-2 right-2 text-xs px-3 py-2 rounded-lg cursor-pointer flex items-center gap-1 focus-ring">
               📷 Inserir Foto 2
             </label>
@@ -168,16 +162,13 @@
       </article>
 
       <!-- CARD 3 -->
-      <article class="card-bg rounded-2xl shadow-md overflow-hidden border border-slate-200 flex flex-col justify-between" aria-labelledby="card3-titulo">
+      <article class="card-etapa card-bg rounded-2xl shadow-md overflow-hidden border border-slate-200 flex flex-col justify-between" aria-labelledby="card3-titulo" data-title="card3-titulo" data-text="card3-texto" data-img="img-card-3">
         <div>
           <div class="relative bg-slate-200 w-full flex items-center justify-center">
             <img id="img-card-3" 
                 src="img/C1.jpeg" 
                 alt="Alunos montando circuito eletrônico com sensores ultrassônicos e Arduino" 
                 class="w-full h-auto object-contain block">
-           <!-- <label for="input-img-3" class="btn-upload absolute bottom-2 right-2 text-xs px-3 py-2 rounded-lg cursor-pointer flex items-center gap-1 focus-ring">
-              📷 Inserir Foto 3
-            </label> -->
             <input type="file" id="input-img-3" accept="image/*" class="sr-only input-foto" data-target="img-card-3">
           </div>
           <div class="p-6">
@@ -205,7 +196,7 @@
       </article>
 
       <!-- CARD 4 -->
-      <article class="card-bg rounded-2xl shadow-md overflow-hidden border border-slate-200 flex flex-col justify-between" aria-labelledby="card4-titulo">
+      <article class="card-etapa card-bg rounded-2xl shadow-md overflow-hidden border border-slate-200 flex flex-col justify-between" aria-labelledby="card4-titulo" data-title="card4-titulo" data-text="card4-texto" data-img="img-card-4">
         <div>
           <div class="relative bg-slate-200 h-64 flex items-center justify-center overflow-hidden">
             <img id="img-card-4" src="https://via.placeholder.com/600x400?text=Foto+4:+Programação+do+Codigo" alt="Aluno digitando o código de programação no computador conectado ao protótipo" class="w-full h-full object-cover">
@@ -234,7 +225,7 @@
       </article>
 
       <!-- CARD 5 -->
-      <article class="card-bg rounded-2xl shadow-md overflow-hidden border border-slate-200 flex flex-col justify-between" aria-labelledby="card5-titulo">
+      <article class="card-etapa card-bg rounded-2xl shadow-md overflow-hidden border border-slate-200 flex flex-col justify-between" aria-labelledby="card5-titulo" data-title="card5-titulo" data-text="card5-texto" data-img="img-card-5">
         <div>
           <div class="relative bg-slate-200 h-64 flex items-center justify-center overflow-hidden">
             <img id="img-card-5" src="https://via.placeholder.com/600x400?text=Foto+5:+Montagem+do+Prototipo" alt="Fixação dos componentes eletrônicos e bateria na haste da bengala" class="w-full h-full object-cover">
@@ -262,7 +253,7 @@
       </article>
 
       <!-- CARD 6 -->
-      <article class="card-bg rounded-2xl shadow-md overflow-hidden border border-slate-200 flex flex-col justify-between" aria-labelledby="card6-titulo">
+      <article class="card-etapa card-bg rounded-2xl shadow-md overflow-hidden border border-slate-200 flex flex-col justify-between" aria-labelledby="card6-titulo" data-title="card6-titulo" data-text="card6-texto" data-img="img-card-6">
         <div>
           <div class="relative bg-slate-200 h-64 flex items-center justify-center overflow-hidden">
             <img id="img-card-6" src="https://via.placeholder.com/600x400?text=Foto+6:+Testes+Práticos" alt="Aluno testando a bengala inteligente navegando no percurso com a maquete sensorial" class="w-full h-full object-cover">

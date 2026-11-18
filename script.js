@@ -2,18 +2,18 @@
 new window.VLibras.Widget('https://vlibras.gov.br/app');
 
 // Sintetizador de Voz Nativo (Web Speech API)
-// Sintetizador de Voz Nativo (Web Speech API) - Versão Otimizada Web/GitHub
-// Sintetizador de Voz Nativo (Otimizado para Mobile & GitHub Pages)
-// ==========================================================================
-// SINTETIZADOR DE VOZ NATIVO (Compatível com Celular, Computador e GitHub)
-// ==========================================================================
-// ==========================================================================
-// SINTETIZADOR DE VOZ NATIVO (Compatível com Celular, Computador e GitHub)
-// ==========================================================================
 const synth = window.speechSynthesis;
 let speechQueue = [];
 let currentUtteranceIndex = 0;
 let isSpeaking = false;
+
+// Controle de toques na tela (suporta 1, 2 ou 3 dedos)
+let lastTapTime = 0;
+let tapCount = 0;
+let tapTimeout = null;
+
+// Controle de rastreamento de scroll para os cards
+let lastReadCardId = null;
 
 // Função universal que toca a fila de frases sem cortar
 function processQueue() {
@@ -40,13 +40,11 @@ function processQueue() {
     utterance.voice = ptVoice;
   }
 
-  // Avança para a próxima frase da fila quando terminar a atual
   utterance.onend = () => {
     currentUtteranceIndex++;
     processQueue();
   };
 
-  // Prevenção de erro em celulares
   utterance.onerror = (e) => {
     console.error('Erro na fala:', e);
     currentUtteranceIndex++;
@@ -77,9 +75,7 @@ function stopSpeech() {
   });
 }
 
-// 1. LER PÁGINA COMPLETA
-// 1. LER PÁGINA COMPLETA (Sem quebras de linha que cortam a frase inicial)
-// 1. LER PÁGINA COMPLETA (Com "Rompendo barreiras" no início de tudo)
+// 1. LER PÁGINA COMPLETA (Com a mensagem inicial solicitada)
 function speakFullStory() {
   if (!synth) {
     alert('Seu navegador não suporta leitura em voz alta.');
@@ -96,8 +92,8 @@ function speakFullStory() {
   const elementoResumo = document.getElementById('texto-resumo');
   const resumo = elementoResumo ? elementoResumo.innerText : '';
   
-  // A frase agora vem PRIMEIRO, antes do título principal e do subtítulo
-  let fullText = `Rompendo barreiras, buscando acessibilidade. ${tituloPrincipal}. ${subtitulo}. ${resumo}. A seguir, apresentamos as seis etapas do projeto: `;
+  // Mensagem inicial detalhada solicitada
+  let fullText = `Aviso de acessibilidade: Você pode parar a leitura a qualquer momento dando três cliques na tela com um, dois ou três dedos. Ao deslizar a tela para baixo, as etapas e as descrições das imagens serão lidas automaticamente. Iniciando a leitura do site. Rompendo barreiras, buscando acessibilidade. ${tituloPrincipal}. ${subtitulo}. ${resumo}. A seguir, apresentamos as seis etapas do projeto: `;
 
   for (let i = 1; i <= 6; i++) {
     const elTitulo = document.getElementById(`card${i}-titulo`);
@@ -111,7 +107,6 @@ function speakFullStory() {
     fullText += `Etapa ${i}: ${titulo}. ${imgAlt ? 'Descrição da imagem: ' + imgAlt + '.' : ''} ${texto}. `;
   }
 
-  // Sanitiza quebras de linha e limpa múltiplos espaços para não devorar a frase no mobile
   const cleanText = fullText.replace(/\s+/g, ' ').trim();
   speechQueue = cleanText.split(/(?<=[.?!])\s+/);
   
@@ -126,19 +121,15 @@ function speakFullStory() {
   processQueue();
 }
 
-// 2. LER ETAPA INDIVIDUAL (1 a 6)
-// 2. LER ETAPA INDIVIDUAL (Compatível com atributos data-title, data-text e data-img)
+// 2. LER ETAPA INDIVIDUAL POR BOTÃO
 function speakCardTextFromButton(button) {
-  document.getElementById('btn-ouvir-tudo').innerHTML = '🔊 Lendo...';
-  if (!synth) {
-    alert('Seu navegador não suporta leitura em voz alta.');
-    return;
-  }
+  const btnOuvirTudo = document.getElementById('btn-ouvir-tudo');
+  if (btnOuvirTudo) btnOuvirTudo.innerHTML = '🔊 Lendo...';
+  
+  if (!synth) return;
 
   stopSpeech();
-  
 
-  // Pega os IDs diretamente dos atributos data-* do botão que foi clicado
   const idTitulo = button.getAttribute('data-title');
   const idTexto = button.getAttribute('data-text');
   const idImg = button.getAttribute('data-img');
@@ -157,7 +148,6 @@ function speakCardTextFromButton(button) {
   }
   textToSpeak += `${texto}`;
 
-  // Divide em frases curtas para funcionar perfeitamente no celular e no computador
   speechQueue = textToSpeak.split(/(?<=[.?!])\s+/);
   currentUtteranceIndex = 0;
   isSpeaking = true;
@@ -165,17 +155,31 @@ function speakCardTextFromButton(button) {
   processQueue();
 }
 
-// CONECTA AUTOMATICAMENTE OS BOTÕES DAS ETAPAS AO CLIQUE
-document.addEventListener('DOMContentLoaded', () => {
-  const botoesEtapas = document.querySelectorAll('.btn-ouvir-card');
-  
-  botoesEtapas.forEach(botao => {
-    botao.addEventListener('click', (e) => {
-      e.preventDefault();
-      speakCardTextFromButton(botao);
-    });
-  });
-});
+// Ler card específico diretamente (usado na rolagem contínua)
+function speakCardDirect(idTitulo, idTexto, idImg) {
+  if (!synth) return;
+  stopSpeech();
+
+  const elTitulo = document.getElementById(idTitulo);
+  const elTexto = document.getElementById(idTexto);
+  const elImg = document.getElementById(idImg);
+
+  const titulo = elTitulo ? elTitulo.innerText : '';
+  const texto = elTexto ? elTexto.innerText : '';
+  const imgAlt = (elImg && elImg.alt) ? elImg.alt : '';
+
+  let textToSpeak = `${titulo}. `;
+  if (imgAlt) {
+    textToSpeak += `Descrição da imagem: ${imgAlt}. `;
+  }
+  textToSpeak += `${texto}`;
+
+  speechQueue = textToSpeak.split(/(?<=[.?!])\s+/);
+  currentUtteranceIndex = 0;
+  isSpeaking = true;
+
+  processQueue();
+}
 
 function toggleHighContrast() {
   document.body.classList.toggle('high-contrast');
@@ -184,16 +188,13 @@ function toggleHighContrast() {
 let currentFontSize = 100;
 
 function changeFontSize(delta) {
-  // Aumenta ou diminui de 10 em 10% (limite entre 80% e 160%)
   currentFontSize += delta * 10;
   if (currentFontSize < 80) currentFontSize = 80;
   if (currentFontSize > 160) currentFontSize = 160;
 
-  // Seleciona os contêineres principais da página
   const main = document.getElementById('conteudo-principal');
   const header = document.querySelector('header');
   
-  // Aplica o tamanho percentual
   if (main) main.style.fontSize = `${currentFontSize}%`;
   if (header) header.style.fontSize = `${currentFontSize}%`;
 }
@@ -206,12 +207,15 @@ function handleImagePreview(event) {
     const reader = new FileReader();
     reader.onload = function(e) {
       const img = document.getElementById(targetImgId);
-      img.src = e.target.result;
+      if (img) img.src = e.target.result;
     };
     reader.readAsDataURL(file);
   }
 }
 
+// --------------------------------------------------------------------------
+// CONFIGURAÇÕES GLOBAIS DE ACESSIBILIDADE
+// --------------------------------------------------------------------------
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-alto-contraste').addEventListener('click', toggleHighContrast);
   document.getElementById('btn-aumentar-fonte').addEventListener('click', () => changeFontSize(1));
@@ -219,13 +223,11 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-ouvir-tudo').addEventListener('click', speakFullStory);
   document.getElementById('btn-parar-audio').addEventListener('click', stopSpeech);
 
-  const btnCards = document.querySelectorAll('.btn-ouvir-card');
-  btnCards.forEach(btn => {
-    btn.addEventListener('click', () => {
-      const titleId = btn.getAttribute('data-title');
-      const textId = btn.getAttribute('data-text');
-      const imgId = btn.getAttribute('data-img');
-      speakCard(titleId, textId, imgId);
+  const botoesEtapas = document.querySelectorAll('.btn-ouvir-card');
+  botoesEtapas.forEach(botao => {
+    botao.addEventListener('click', (e) => {
+      e.preventDefault();
+      speakCardTextFromButton(botao);
     });
   });
 
@@ -233,7 +235,70 @@ document.addEventListener('DOMContentLoaded', () => {
   photoInputs.forEach(input => {
     input.addEventListener('change', handleImagePreview);
   });
+
+  // SISTEMA DE TOQUES NA TELA (Compatível com 1, 2 ou 3 dedos em qualquer lugar)
+  document.addEventListener('touchend', (e) => {
+    if (e.target.closest('input') || e.target.closest('label')) return;
+
+    const currentTime = new Date().getTime();
+    tapCount++;
+
+    if (tapTimeout) {
+      clearTimeout(tapTimeout);
+    }
+
+    tapTimeout = setTimeout(() => {
+      if (tapCount === 2) {
+        // 2 toques rápidos em qualquer lugar -> Lê o site inteiro com a mensagem de aviso
+        speakFullStory();
+      } else if (tapCount >= 3) {
+        // 3 toques rápidos em qualquer lugar -> Para a leitura imediatamente
+        stopSpeech();
+      }
+      tapCount = 0;
+    }, 400);
+  });
+
+  // SUPORTE TAMBÉM PARA CLIQUE DE MOUSE (Caso testem no computador)
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('input') || e.target.closest('label')) return;
+    
+    // Evita conflito duplo caso o navegador dispare touch e click juntos
+    const currentTime = new Date().getTime();
+    if (currentTime - lastTapTime < 500) return;
+    lastTapTime = currentTime;
+  });
+
+  // ROLAGEM CONTÍNUA DA TELA (SCROLL): LÊ OS CARDS AUTOMATICAMENTE A QUALQUER MOMENTO
+  const cardsEtapas = document.querySelectorAll('.card-etapa');
+  
+  window.addEventListener('scroll', () => {
+    const scrollPosition = window.scrollY + window.innerHeight * 0.45; // Centro da tela do celular
+
+    let activeCardFound = false;
+
+    cardsEtapas.forEach(card => {
+      const cardTop = card.offsetTop;
+      const cardBottom = cardTop + card.offsetHeight;
+
+      if (scrollPosition >= cardTop && scrollPosition <= cardBottom) {
+        activeCardFound = true;
+        const cardId = card.getAttribute('data-title');
+
+        if (cardId && cardId !== lastReadCardId) {
+          lastReadCardId = cardId;
+          
+          const titleId = card.getAttribute('data-title');
+          const textId = card.getAttribute('data-text');
+          const imgId = card.getAttribute('data-img');
+
+          speakCardDirect(titleId, textId, imgId);
+        }
+      }
+    });
+
+    if (!activeCardFound) {
+      lastReadCardId = null;
+    }
+  });
 });
-
-let fullText = `Rompendo barreiras, buscando acessibilidade ${resumo}. `;
-
