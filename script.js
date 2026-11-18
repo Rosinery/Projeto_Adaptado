@@ -2,16 +2,18 @@
 new window.VLibras.Widget('https://vlibras.gov.br/app');
 
 // Sintetizador de Voz Nativo (Web Speech API)
+// Sintetizador de Voz Nativo (Web Speech API) - Versão Otimizada Web/GitHub
+// Sintetizador de Voz Nativo (Otimizado para Mobile & GitHub Pages)
+// ==========================================================================
+// SINTETIZADOR DE VOZ NATIVO (Compatível com Celular, Computador e GitHub)
+// ==========================================================================
+// ==========================================================================
+// SINTETIZADOR DE VOZ NATIVO (Compatível com Celular, Computador e GitHub)
+// ==========================================================================
 const synth = window.speechSynthesis;
 let speechQueue = [];
 let currentUtteranceIndex = 0;
 let isSpeaking = false;
-
-// Controle de cliques para o triplo clique (Parar áudio)
-let clickTimestamps = [];
-
-// Controle de leitura automática por scroll
-let lastScannedCardId = null;
 
 // Função universal que toca a fila de frases sem cortar
 function processQueue() {
@@ -38,11 +40,13 @@ function processQueue() {
     utterance.voice = ptVoice;
   }
 
+  // Avança para a próxima frase da fila quando terminar a atual
   utterance.onend = () => {
     currentUtteranceIndex++;
     processQueue();
   };
 
+  // Prevenção de erro em celulares
   utterance.onerror = (e) => {
     console.error('Erro na fala:', e);
     currentUtteranceIndex++;
@@ -73,7 +77,9 @@ function stopSpeech() {
   });
 }
 
-// 1. LER PÁGINA COMPLETA (Com o aviso prévio de instruções solicitado)
+// 1. LER PÁGINA COMPLETA
+// 1. LER PÁGINA COMPLETA (Sem quebras de linha que cortam a frase inicial)
+// 1. LER PÁGINA COMPLETA (Com "Rompendo barreiras" no início de tudo)
 function speakFullStory() {
   if (!synth) {
     alert('Seu navegador não suporta leitura em voz alta.');
@@ -90,8 +96,8 @@ function speakFullStory() {
   const elementoResumo = document.getElementById('texto-resumo');
   const resumo = elementoResumo ? elementoResumo.innerText : '';
   
-  // Mensagem inicial solicitada explicando que pode parar com 3 cliques e ler rolando a tela
-  let fullText = `Aviso de acessibilidade: Você pode parar a leitura a qualquer momento dando três cliques rápidos em qualquer lugar da tela. Ao deslizar a tela para baixo, as etapas e suas descrições de imagens serão lidas automaticamente. Iniciando a leitura do site. Rompendo barreiras, buscando acessibilidade. ${tituloPrincipal}. ${subtitulo}. ${resumo}. A seguir, apresentamos as seis etapas do projeto: `;
+  // A frase agora vem PRIMEIRO, antes do título principal e do subtítulo
+  let fullText = `Rompendo barreiras, buscando acessibilidade. ${tituloPrincipal}. ${subtitulo}. ${resumo}. A seguir, apresentamos as seis etapas do projeto: `;
 
   for (let i = 1; i <= 6; i++) {
     const elTitulo = document.getElementById(`card${i}-titulo`);
@@ -105,6 +111,7 @@ function speakFullStory() {
     fullText += `Etapa ${i}: ${titulo}. ${imgAlt ? 'Descrição da imagem: ' + imgAlt + '.' : ''} ${texto}. `;
   }
 
+  // Sanitiza quebras de linha e limpa múltiplos espaços para não devorar a frase no mobile
   const cleanText = fullText.replace(/\s+/g, ' ').trim();
   speechQueue = cleanText.split(/(?<=[.?!])\s+/);
   
@@ -119,15 +126,19 @@ function speakFullStory() {
   processQueue();
 }
 
-// 2. LER ETAPA INDIVIDUAL POR BOTÃO
+// 2. LER ETAPA INDIVIDUAL (1 a 6)
+// 2. LER ETAPA INDIVIDUAL (Compatível com atributos data-title, data-text e data-img)
 function speakCardTextFromButton(button) {
-  const btnOuvirTudo = document.getElementById('btn-ouvir-tudo');
-  if (btnOuvirTudo) btnOuvirTudo.innerHTML = '🔊 Lendo...';
-  
-  if (!synth) return;
+  document.getElementById('btn-ouvir-tudo').innerHTML = '🔊 Lendo...';
+  if (!synth) {
+    alert('Seu navegador não suporta leitura em voz alta.');
+    return;
+  }
 
   stopSpeech();
+  
 
+  // Pega os IDs diretamente dos atributos data-* do botão que foi clicado
   const idTitulo = button.getAttribute('data-title');
   const idTexto = button.getAttribute('data-text');
   const idImg = button.getAttribute('data-img');
@@ -146,6 +157,7 @@ function speakCardTextFromButton(button) {
   }
   textToSpeak += `${texto}`;
 
+  // Divide em frases curtas para funcionar perfeitamente no celular e no computador
   speechQueue = textToSpeak.split(/(?<=[.?!])\s+/);
   currentUtteranceIndex = 0;
   isSpeaking = true;
@@ -153,31 +165,17 @@ function speakCardTextFromButton(button) {
   processQueue();
 }
 
-// Ler card específico por ID diretamente (usado no scroll)
-function speakCardDirect(idTitulo, idTexto, idImg) {
-  if (!synth) return;
-  stopSpeech();
-
-  const elTitulo = document.getElementById(idTitulo);
-  const elTexto = document.getElementById(idTexto);
-  const elImg = document.getElementById(idImg);
-
-  const titulo = elTitulo ? elTitulo.innerText : '';
-  const texto = elTexto ? elTexto.innerText : '';
-  const imgAlt = (elImg && elImg.alt) ? elImg.alt : '';
-
-  let textToSpeak = `${titulo}. `;
-  if (imgAlt) {
-    textToSpeak += `Descrição da imagem: ${imgAlt}. `;
-  }
-  textToSpeak += `${texto}`;
-
-  speechQueue = textToSpeak.split(/(?<=[.?!])\s+/);
-  currentUtteranceIndex = 0;
-  isSpeaking = true;
-
-  processQueue();
-}
+// CONECTA AUTOMATICAMENTE OS BOTÕES DAS ETAPAS AO CLIQUE
+document.addEventListener('DOMContentLoaded', () => {
+  const botoesEtapas = document.querySelectorAll('.btn-ouvir-card');
+  
+  botoesEtapas.forEach(botao => {
+    botao.addEventListener('click', (e) => {
+      e.preventDefault();
+      speakCardTextFromButton(botao);
+    });
+  });
+});
 
 function toggleHighContrast() {
   document.body.classList.toggle('high-contrast');
@@ -186,13 +184,16 @@ function toggleHighContrast() {
 let currentFontSize = 100;
 
 function changeFontSize(delta) {
+  // Aumenta ou diminui de 10 em 10% (limite entre 80% e 160%)
   currentFontSize += delta * 10;
   if (currentFontSize < 80) currentFontSize = 80;
   if (currentFontSize > 160) currentFontSize = 160;
 
+  // Seleciona os contêineres principais da página
   const main = document.getElementById('conteudo-principal');
   const header = document.querySelector('header');
   
+  // Aplica o tamanho percentual
   if (main) main.style.fontSize = `${currentFontSize}%`;
   if (header) header.style.fontSize = `${currentFontSize}%`;
 }
@@ -205,15 +206,12 @@ function handleImagePreview(event) {
     const reader = new FileReader();
     reader.onload = function(e) {
       const img = document.getElementById(targetImgId);
-      if (img) img.src = e.target.result;
+      img.src = e.target.result;
     };
     reader.readAsDataURL(file);
   }
 }
 
-// --------------------------------------------------------------------------
-// CONFIGURAÇÕES GLOBAIS DE ACESSIBILIDADE
-// --------------------------------------------------------------------------
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-alto-contraste').addEventListener('click', toggleHighContrast);
   document.getElementById('btn-aumentar-fonte').addEventListener('click', () => changeFontSize(1));
@@ -221,11 +219,13 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-ouvir-tudo').addEventListener('click', speakFullStory);
   document.getElementById('btn-parar-audio').addEventListener('click', stopSpeech);
 
-  const botoesEtapas = document.querySelectorAll('.btn-ouvir-card');
-  botoesEtapas.forEach(botao => {
-    botao.addEventListener('click', (e) => {
-      e.preventDefault();
-      speakCardTextFromButton(botao);
+  const btnCards = document.querySelectorAll('.btn-ouvir-card');
+  btnCards.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const titleId = btn.getAttribute('data-title');
+      const textId = btn.getAttribute('data-text');
+      const imgId = btn.getAttribute('data-img');
+      speakCard(titleId, textId, imgId);
     });
   });
 
@@ -233,65 +233,7 @@ document.addEventListener('DOMContentLoaded', () => {
   photoInputs.forEach(input => {
     input.addEventListener('change', handleImagePreview);
   });
-
-  // 1. DOIS CLIQUES EM QUALQUER LUGAR DA TELA PARA LER O SITE DO INÍCIO
-  let lastTapTime = 0;
-  document.addEventListener('click', (e) => {
-    // Evita conflito se clicar em botões específicos de ação que já possuem comportamento próprio
-    if (e.target.closest('button') || e.target.closest('input') || e.target.closest('a')) return;
-
-    const currentTime = new Date().getTime();
-    const tapLength = currentTime - lastTapTime;
-
-    // Se der 2 cliques rápidos (menos de 400ms) em qualquer lugar vazio da página
-    if (tapLength < 400 && tapLength > 0) {
-      speakFullStory();
-    }
-    lastTapTime = currentTime;
-  });
-
-  // 2. TRÊS CLIQUES EM QUALQUER LUGAR DA TELA PARA PARAR O ÁUDIO IMEDIATAMENTE
-  document.addEventListener('click', () => {
-    const now = new Date().getTime();
-    clickTimestamps.push(now);
-
-    // Mantém apenas cliques dos últimos 700ms
-    clickTimestamps = clickTimestamps.filter(timestamp => now - timestamp < 700);
-
-    if (clickTimestamps.length >= 3) {
-      stopSpeech();
-      clickTimestamps = [];
-    }
-  });
-
-  // 3. ROLAR A TELA LÊ AUTOMATICAMENTE CADA CARD QUE CHEGA NA TELA
-  const cardsEtapas = document.querySelectorAll('.card-etapa');
-  const observerOptions = {
-    root: null,
-    rootMargin: '-10% 0px -40% 0px', 
-    threshold: 0.15
-  };
-
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        const card = entry.target;
-        const cardId = card.getAttribute('data-title');
-
-        if (cardId && cardId !== lastScannedCardId) {
-          lastScannedCardId = cardId;
-          
-          const titleId = card.getAttribute('data-title');
-          const textId = card.getAttribute('data-text');
-          const imgId = card.getAttribute('data-img');
-
-          speakCardDirect(titleId, textId, imgId);
-        }
-      }
-    });
-  }, observerOptions);
-
-  cardsEtapas.forEach(card => {
-    observer.observe(card);
-  });
 });
+
+let fullText = `Rompendo barreiras, buscando acessibilidade ${resumo}. `;
+
